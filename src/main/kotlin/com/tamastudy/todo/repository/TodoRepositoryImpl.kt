@@ -15,18 +15,26 @@ class TodoRepositoryImpl : TodoRepository {
     lateinit var todoDataBase: TodoDataBase
 
     override fun save(todo: Todo): Todo {
-//        val index = ++todoDataBase.index
-//        todo.index = index
-//        todoDataBase.todoList.add(todo)
-//        return todo
+        return todo.index?.let {  index ->
+            // update
 
-        return todo.apply {
-            this.index = ++todoDataBase.index
-            this.createdAt = LocalDateTime.now()
-            this.updatedAt = LocalDateTime.now()
-        }.run {
-            todoDataBase.todoList.add(todo)
-            this
+            findOne(index)?.apply {
+                this.title = todo.title
+                this.description = todo.description
+                this.schedule = todo.schedule
+                this.updatedAt = LocalDateTime.now()
+            }
+        }?: kotlin.run {
+            // insert
+
+            todo.apply {
+                this.index = ++todoDataBase.index
+                this.createdAt = LocalDateTime.now()
+                this.updatedAt = LocalDateTime.now()
+            }.run {
+                todoDataBase.todoList.add(todo)
+                this
+            }
         }
     }
 
@@ -64,12 +72,11 @@ class TodoRepositoryImpl : TodoRepository {
     }
 
     override fun delete(index: Int): Boolean {
-        val todo = findOne(index)
 
-        return todo.let {
+        return findOne(index)?.let {
             todoDataBase.todoList.remove(it)
             true
-        }.run {
+        }?: kotlin.run {
             false
         }
     }
